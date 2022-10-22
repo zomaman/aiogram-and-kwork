@@ -34,7 +34,7 @@ async def authorization(message: types.Message):
         async def input(message: types.Message):
             global login_kwork, passwork_kwork
             login_kwork, passwork_kwork = message.text.split(" ")
-            await bot.send_message(message.from_user.id, "")
+            await bot.send_message(message.from_user.id, "Отправлено")
     else:
         await bot.send_message(message.from_user.id, "Не, это не для тебя")
 
@@ -49,36 +49,40 @@ async def text(message: types.Message):
 
 @dp.callback_query_handler(lambda user_id: user_id.data in unread_names_ids.values())
 async def answer(message: types.Message):
-    await bot.send_message(ADMIN_ID, "Напиши сообщение")
+    if message.from_user.id == int(ADMIN_ID):
+        await bot.send_message(ADMIN_ID, "Напиши сообщение")
 
-    @dp.message_handler(content_types=["text"])
-    async def send_answer(answer: types.Message):
-        api = Kwork(login=login_kwork, password=passwork_kwork)
-        await api.send_message(user_id=int(message.data), text=answer.text)
-        await api.close()
-        await bot.send_message(ADMIN_ID, "Отправлено")
-        # Удаление непрочитанного
-        for user_name, user_id in unread_names_ids.items():
-            if int(message.data) == user_id:
-                del unread_names_ids[user_name]
+        @dp.message_handler(content_types=["text"])
+        async def send_answer(answer: types.Message):
+            api = Kwork(login=login_kwork, password=passwork_kwork)
+            await api.send_message(user_id=int(message.data), text=answer.text)
+            await api.close()
+            await bot.send_message(ADMIN_ID, "Отправлено")
+            # Удаление непрочитанного
+            for user_name, user_id in unread_names_ids.items():
+                if int(message.data) == user_id:
+                    del unread_names_ids[user_name]
 
 
 async def get_unread_messages():
     while True:
-        api = Kwork(login=login_kwork, password=passwork_kwork)
+        try:
+            api = Kwork(login=login_kwork, password=passwork_kwork)
 
-        # Если "Необходимо ввести последние 4 цифры номера телефона."
-        # api = Kwork(login="login", password="password", phone_last="0102")
+            # Если "Необходимо ввести последние 4 цифры номера телефона."
+            # api = Kwork(login="login", password="password", phone_last="0102")
 
-        # Получения всех диалогов на аккаунте
-        all_dialogs = await api.get_all_dialogs()
-        for line in all_dialogs:
-            if line.unread_count > 0:
-                if line.user_id not in unread_names_ids.values():
-                    unread_names_ids[line.username] = str(line.user_id)
-                await bot.send_message(ADMIN_ID,
-                                       f"{line.username} ({line.unread_count}): {line.last_message}\nОтветить: /answer")
-        await api.close()
+            # Получения всех диалогов на аккаунте
+            all_dialogs = await api.get_all_dialogs()
+            for line in all_dialogs:
+                if line.unread_count > 0:
+                    if line.user_id not in unread_names_ids.values():
+                        unread_names_ids[line.username] = str(line.user_id)
+                    await bot.send_message(ADMIN_ID,
+                                           f"{line.username} ({line.unread_count}): {line.last_message}\nОтветить: /answer")
+            await api.close()
+        except Exception as ex:
+            await bot.send_message(ADMIN_ID, f"{ex}")
         await asyncio.sleep(600)
 
 
