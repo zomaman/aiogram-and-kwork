@@ -14,7 +14,7 @@ passwork_kwork = "Иди нахуй!"
 
 @dp.message_handler(commands=["start", "help"])
 async def start(message: types.Message):
-    if message.from_user.id == ADMIN_ID:
+    if message.from_user.id == int(ADMIN_ID):
         await bot.send_message(message.from_user.id, "Команды: /help /check /authorization")
     else:
         await bot.send_message(message.from_user.id, "Команды: /help /check")
@@ -27,7 +27,7 @@ async def check(message: types.Message):
 
 @dp.message_handler(commands=["authorization"])
 async def authorization(message: types.Message):
-    if message.from_user.id == ADMIN_ID:
+    if message.from_user.id == int(ADMIN_ID):
         await bot.send_message(message.from_user.id, "Отправь логин и пароль через пробел")
 
         @dp.message_handler(content_types=["text"])
