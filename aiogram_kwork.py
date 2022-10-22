@@ -54,10 +54,16 @@ async def answer(message: types.Message):
 
         @dp.message_handler(content_types=["text"])
         async def send_answer(answer: types.Message):
-            api = Kwork(login=login_kwork, password=passwork_kwork)
-            await api.send_message(user_id=int(message.data), text=answer.text)
-            await api.close()
-            await bot.send_message(ADMIN_ID, "Отправлено")
+            try:
+                api = Kwork(login=login_kwork, password=passwork_kwork, phone_last="7138")
+                await api.send_message(user_id=int(message.data), text=answer.text)
+                await api.close()
+                await bot.send_message(ADMIN_ID, "Отправлено")
+            except Exception as ex:
+                await bot.send_message(ADMIN_ID, "Сообщение не отправлено")
+                await bot.send_message(ADMIN_ID, f"{ex}")
+                await api.close()
+                return
             # Удаление непрочитанного
             for user_name, user_id in unread_names_ids.items():
                 if int(message.data) == user_id:
@@ -67,11 +73,16 @@ async def answer(message: types.Message):
 async def get_unread_messages():
     while True:
         try:
-            api = Kwork(login=login_kwork, password=passwork_kwork)
+            try:
+                # api = Kwork(login=login_kwork, password=passwork_kwork)
 
-            # Если "Необходимо ввести последние 4 цифры номера телефона."
-            # api = Kwork(login="login", password="password", phone_last="0102")
-
+                # Если "Необходимо ввести последние 4 цифры номера телефона."
+                api = Kwork(login=login_kwork, password=passwork_kwork, phone_last="7138")
+            except Exception as ex:
+                await api.close()
+                await bot.send_message(ADMIN_ID, f"{ex}")
+                print(ex)
+                continue
             # Получения всех диалогов на аккаунте
             all_dialogs = await api.get_all_dialogs()
             for line in all_dialogs:
@@ -83,7 +94,7 @@ async def get_unread_messages():
             await api.close()
         except Exception as ex:
             await bot.send_message(ADMIN_ID, f"{ex}")
-        await asyncio.sleep(600)
+        await asyncio.sleep(10)
 
 
 if __name__ == '__main__':
